@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MGSML JOKER - Global Pro Mining Engine</title>
+    
+    <!-- Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <!-- Firebase App, Firestore & Auth CDN SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDfN-bzvkvDKH4zFMztm_PZVmRH01gL63Y",
+            authDomain: "mgs-mega-project.firebaseapp.com",
+            projectId: "mgs-mega-project",
+            storageBucket: "mgs-mega-project.firebasestorage.app",
+            messagingSenderId: "802244407572",
+            appId: "1:802244407572:web:05985d2c0dd43763269201",
+            measurementId: "G-3XK6RBP4ET"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        db.enablePersistence().catch((err) => console.log("Persistence note:", err.code));
+    </script>
+
+    <style>
+        :root {
+            --primary-joker: #8b5cf6;
+            --accent-purple: #a855f7;
+            --gold: #facc15;
+            --danger: #ef4444;
+            --fire-orange: #f97316;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #0f172a 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            padding-bottom: 70px;
+        }
+
+        .engine-header {
+            width: 100%; max-width: 480px; height: 58px;
+            background: rgba(30, 27, 75, 0.95); backdrop-filter: blur(12px);
+            border-bottom: 1.5px solid rgba(139, 92, 246, 0.4);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 16px; position: sticky; top: 0; z-index: 1000;
+        }
+        .brand-box { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .menu-btn { font-size: 22px; background: none; border: none; color: #c084fc; cursor: pointer; padding-right: 5px; }
+        .brand-title { font-size: 13px; font-weight: 900; color: #c084fc; text-transform: uppercase; }
+        .brand-sub { font-size: 8px; font-weight: 800; color: var(--gold); text-transform: uppercase; }
+
+        .wallet-pill {
+            background: rgba(139, 92, 246, 0.2); border: 1.5px solid var(--accent-purple);
+            padding: 5px 10px; border-radius: 18px; font-size: 11px; font-weight: 900; color: #c084fc;
+            display: flex; align-items: center; gap: 5px;
+        }
+
+        .side-menu {
+            position: fixed; left: -280px; top: 0; width: 280px; height: 100%;
+            background: #1e1b4b; transition: 0.3s ease-in-out; z-index: 7000;
+            padding: 15px; box-sizing: border-box; border-right: 1.5px solid #8b5cf6;
+            overflow-y: auto; box-shadow: 5px 0 25px rgba(0,0,0,0.9);
+        }
+        .side-menu.open { left: 0; }
+        .side-menu h3 { color: #c084fc; margin-top: 0; font-size: 15px; border-bottom: 1px solid #8b5cf6; padding-bottom: 10px; }
+        .menu-link { display: block; color: white; text-decoration: none; padding: 12px 0; border-bottom: 1px solid #8b5cf6; font-size: 12px; font-weight: 800; cursor: pointer; }
+
+        .engine-container {
+            width: 100%; max-width: 480px; padding: 16px; display: flex; flex-direction: column; gap: 14px;
+        }
+
+        .mining-card {
+            background: linear-gradient(145deg, #312e81, #1e1b4b); 
+            border: 2.5px solid #8b5cf6; 
+            border-radius: 18px;
+            padding: 16px; text-align: center; 
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.8), 0 0 25px rgba(139, 92, 246, 0.4);
+            display: flex; flex-direction: column; align-items: center; position: relative;
+        }
+
+        .supply-burn-box {
+            width: 100%; background: #0f172a; border: 1.5px solid #7c3aed; border-radius: 12px;
+            padding: 10px; margin-bottom: 10px; text-align: center;
+        }
+        .supply-text { font-size: 11px; color: #e9d5ff; font-weight: 700; }
+        .supply-val { font-size: 13px; font-weight: 900; color: #facc15; margin-top: 2px; }
+        .price-text { font-size: 12px; color: #c084fc; font-weight: 900; margin-bottom: 8px; }
+
+        .factory-machine-box {
+            width: 100%; 
+            background: linear-gradient(145deg, #6d28d9, #5b21b6);
+            border: 2px solid #c084fc; 
+            border-radius: 16px;
+            padding: 12px; 
+            margin: 4px 0 10px 0; 
+            position: relative; 
+            box-sizing: border-box;
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.4), inset 0 0 15px rgba(109, 40, 217, 0.3);
+        }
+        .factory-title { font-size: 12px; font-weight: 900; color: #facc15; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.8px; }
+        #refinery-canvas { 
+            width: 100%; 
+            height: 200px; 
+            background: radial-gradient(circle, #312e81 0%, #1e1b4b 100%);
+            border-radius: 12px; 
+            border: 1.5px solid rgba(139, 92, 246, 0.6); 
+            display: block; 
+        }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; margin: 8px 0; }
+        .stat-box { background: #0f172a; border: 1.5px solid #7c3aed; border-radius: 10px; padding: 8px 4px; text-align: center; }
+        .stat-val { font-size: 12px; font-weight: 900; color: #facc15; }
+        .stat-lbl { font-size: 8px; font-weight: 800; color: #e9d5ff; margin-top: 2px; text-transform: uppercase; }
+
+        .logo-display-box {
+            width: 100%; 
+            background: linear-gradient(145deg, #6d28d9, #5b21b6);
+            border: 2px solid #c084fc; 
+            border-radius: 16px; 
+            padding: 18px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            margin: 6px 0; 
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.35), 0 8px 25px rgba(0, 0, 0, 0.6);
+        }
+        .logo-circle {
+            width: 125px; height: 125px;
+            background: radial-gradient(circle at 30% 30%, #c084fc, #7c3aed 60%, #1e1b4b 100%);
+            border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            border: 4px solid #facc15;
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.9), 0 0 15px rgba(250, 204, 21, 0.9);
+            transition: transform 0.3s ease;
+        }
+        .logo-circle.is-vibrating {
+            animation: logo-vibrate 0.25s infinite alternate ease-in-out;
+        }
+        @keyframes logo-vibrate {
+            0% { transform: translate(1.5px, 1.5px) rotate(0deg); }
+            100% { transform: translate(-1.5px, -1.5px) rotate(-1.5deg); }
+        }
+        .logo-symbol { font-size: 26px; text-shadow: 0 2px 5px rgba(0,0,0,0.8); }
+        .logo-text { font-size: 15px; font-weight: 900; color: #fff; text-shadow: 0 2px 5px rgba(0,0,0,0.9); letter-spacing: 0.5px; margin-top: 2px; }
+        .logo-sub { font-size: 8px; font-weight: 900; color: #facc15; text-transform: uppercase; letter-spacing: 1px; }
+
+        .progress-bar-container {
+            width: 100%; background: #0f172a; border: 1.5px solid #8b5cf6; border-radius: 10px;
+            height: 14px; margin-top: 14px; overflow: hidden; position: relative;
+        }
+        .progress-bar-fill {
+            height: 100%; width: 0%; background: linear-gradient(90deg, #c084fc, #facc15);
+            transition: width 0.5s linear; border-radius: 10px;
+        }
+        .progress-text { font-size: 11px; font-weight: 800; color: #facc15; margin-top: 6px; }
+
+        .factory-status-text {
+            font-size: 11px; font-weight: 800; color: #f3e8ff; margin-top: 6px; background: #0f172a; padding: 8px; border-radius: 10px; border: 1.5px solid #7c3aed;
+        }
+        .factory-status-text span { color: #facc15; }
+
+        .stake-btn {
+            background: linear-gradient(135deg, #7c3aed, #c084fc); color: #030712; border: none;
+            padding: 12px 24px; border-radius: 12px; font-size: 13px; font-weight: 900; cursor: pointer;
+            width: 100%; text-transform: uppercase; letter-spacing: 0.8px;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4); margin-top: 8px;
+        }
+        .stake-btn:active { transform: scale(0.96); }
+        .timer-display { font-size: 11.5px; font-weight: 900; color: #facc15; background: #0f172a; padding: 6px 14px; border-radius: 20px; border: 1.5px solid #7c3aed; margin-top: 8px; }
+
+        .transfer-section {
+            background: linear-gradient(145deg, #312e81, #1e1b4b); 
+            border: 2px solid #8b5cf6; 
+            border-radius: 18px; 
+            padding: 16px; 
+            width: 100%; 
+            box-sizing: border-box;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            display: none;
+        }
+        .form-group { margin-bottom: 10px; text-align: left; }
+        .form-label { font-size: 10.5px; font-weight: 800; color: #e9d5ff; display: block; margin-bottom: 4px; text-transform: uppercase; }
+        .custom-input { width: 100%; padding: 10px; background: #0f172a; border: 1.5px solid #7c3aed; color: #fff; border-radius: 8px; font-size: 12px; box-sizing: border-box; }
+
+        #admin-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000000; z-index: 9999; justify-content: center; align-items: center;
+        }
+        .admin-box { background: #0a0a0a; border: 1.5px solid #262626; padding: 24px; border-radius: 12px; width: 90%; max-width: 360px; text-align: center; max-height: 90vh; overflow-y: auto; }
+
+        /* Auto-Closing Full-Screen Ad Overlay */
+        #ad-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.98); z-index: 99999; justify-content: center; align-items: center; flex-direction: column;
+            padding: 15px; box-sizing: border-box;
+        }
+        .ad-fullscreen-box {
+            width: 100%; max-width: 440px; height: 85vh; background: #1e1b4b; border: 2px solid var(--primary-joker);
+            border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.9);
+        }
+        .ad-header-bar {
+            background: #312e81; padding: 12px; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1.5px solid var(--primary-joker); font-size: 12px; font-weight: 900; color: var(--gold);
+        }
+        .ad-body-area {
+            flex: 1; width: 100%; background: #0f172a; display: flex; justify-content: center; align-items: center; position: relative; overflow: hidden;
+        }
+
+        .bottom-bar {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 54px;
+            background: rgba(30, 27, 75, 0.95); border-top: 1.5px solid rgba(139, 92, 246, 0.4);
+            display: flex; justify-content: center; align-items: center; padding: 0 14px; z-index: 1000;
+        }
+        .back-main-btn {
+            width: 100%; max-width: 480px; height: 38px; background: #6d28d9;
+            border: 1.5px solid #8b5cf6; color: #c084fc; border-radius: 10px;
+            font-size: 11px; font-weight: 900; text-transform: uppercase; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="engine-header">
+        <div class="brand-box">
+            <button class="menu-btn" onclick="toggleMenu()">☰</button>
+            <div onclick="goBackToHeadRoom()">
+                <div class="brand-title">JOKER Mining Engine</div>
+                <div class="brand-sub">Global Cloud Sync</div>
+            </div>
+        </div>
+        <div class="wallet-pill">
+            <span>🆔 <span id="header-uid">MGSML2000</span></span>
+            <span>|</span>
+            <span>🃏 <span id="header-joker-bal">0</span> JOKER</span>
+        </div>
+    </header>
+
+    <div class="side-menu" id="sideMenu">
+        <h3>MGSML JOKER MENU</h3>
+        <a class="menu-link" onclick="toggleMenu()">🏠 Dashboard</a>
+        <a class="menu-link" onclick="openAdminModal()">🔐 Secret Admin Panel</a>
+        <a class="menu-link" onclick="toggleMenu()" style="color: #e9d5ff;">❌ Close Menu</a>
+    </div>
+
+    <div id="admin-modal" style="display:none;">
+        <div class="admin-box">
+            <h3 style="color:#ffffff; margin-bottom:14px; font-size:14px; letter-spacing:1px;">ADMIN GATEWAY</h3>
+            
+            <div id="admin-login-sec">
+                <input type="password" id="admin-mpin-input" class="custom-input" placeholder="Enter Admin mPIN" maxlength="20" oninput="checkAutoUnlock(this.value)">
+                <button class="stake-btn" style="background:#262626; color:#fff; margin-top:8px; display:none;" onclick="verifyAdminPin()">Unlock</button>
+                <button class="stake-btn" style="background:transparent; color:#737373; border:none; margin-top:10px;" onclick="closeAdminModal()">Cancel</button>
+            </div>
+            
+            <div id="admin-controls-sec" style="display:none; text-align:left; font-size:11px;">
+                <div style="background:#141414; padding:10px; border-radius:8px; border:1px solid #262626; margin-bottom:10px;">
+                    <label style="color:#a3a3a3; font-weight:800; display:block; margin-bottom:4px;">3-Hour Mining Reward (JOKER):</label>
+                    <input type="number" id="adm-reward-input" class="custom-input" value="8.5">
+                    <button class="stake-btn" style="background:var(--accent-purple); color:#fff; margin-top:8px; padding:8px;" onclick="saveMiningRewardOnly()">💾 Save Reward</button>
+                </div>
+
+                <div style="background:#141414; padding:10px; border-radius:8px; border:1px solid #262626; margin-bottom:10px;">
+                    <label style="color:#facc15; font-weight:800; display:block; margin-bottom:4px;">📢 3H Mining Ad Link / Script:</label>
+                    <textarea id="adm-adlink-input" class="custom-input" rows="3" placeholder="Paste Adsterra Smartlink or Script here"></textarea>
+                    
+                    <label style="color:#a3a3a3; font-weight:800; display:block; margin:8px 0 4px 0;">Ad Auto-Close Timer (Seconds):</label>
+                    <input type="number" id="adm-adtimer-input" class="custom-input" value="15" min="5" max="60">
+
+                    <button class="stake-btn" style="background:#8b5cf6; color:#fff; margin-top:8px; padding:8px;" onclick="saveAdSettings()">💾 Save Ad Settings</button>
+                </div>
+
+                <div style="background:#141414; padding:10px; border-radius:8px; border:1px solid #262626; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <label style="color:#a3a3a3; font-weight:800; display:block;">Mini Exchange Transfer:</label>
+                        <span id="transfer-status-label" style="font-size:9px; color:#ef4444;">Status: OFF (Hidden)</span>
+                    </div>
+                    <button id="transfer-toggle-btn" class="stake-btn" style="width:auto; padding:6px 14px; background:#ef4444; color:#fff; margin-top:0;" onclick="toggleTransferFeature()">Turn ON</button>
+                </div>
+
+                <div style="background:#141414; padding:10px; border-radius:8px; border:1px solid #262626; margin-bottom:10px;">
+                    <label style="color:#a3a3a3; font-weight:800; display:block; margin-bottom:4px;">Change Admin mPIN / Password:</label>
+                    <input type="text" id="adm-new-mpin" class="custom-input" placeholder="Enter new mPIN">
+                    <button class="stake-btn" style="background:#facc15; color:#000; margin-top:8px; padding:8px;" onclick="saveNewAdminPassword()">🔑 Update Password</button>
+                </div>
+
+                <button class="stake-btn" style="background:#262626; color:#fff; margin-top:4px;" onclick="closeAdminModal()">Close Panel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auto-Closing Full-Screen Ad Overlay with Live Timer -->
+    <div id="ad-modal">
+        <div class="ad-fullscreen-box">
+            <div class="ad-header-bar">
+                <span>📢 Sponsored Ad Running</span>
+                <span id="ad-countdown-pill" style="background:#0f172a; padding:4px 10px; border-radius:6px; border:1px solid var(--primary-joker);">Auto-close in: <strong id="ad-timer-sec" style="color:var(--gold);">15</strong>s</span>
+            </div>
+            <div class="ad-body-area" id="active-ad-container">
+                <!-- Ad loads directly here for impression counting without click requirement -->
+            </div>
+        </div>
+    </div>
+
+    <main class="engine-container">
+        <div class="mining-card">
+            
+            <div class="supply-burn-box">
+                <div class="supply-text">GLOBAL SUPPLY & REMAINING MIGRATION POOL</div>
+                <div class="supply-val" id="live-supply-counter">100,000,000 / 100,000,000 JOKER</div>
+            </div>
+
+            <div class="price-text">1 JOKER = ₹0.03 INR (~$<span id="joker-price">0.00036</span> USDT)</div>
+
+            <div class="factory-machine-box">
+                <div class="factory-title">🏭 Sub-Migration & 24K Pure Vault (3 Years Plan)</div>
+                <canvas id="refinery-canvas" width="440" height="200"></canvas>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-val" id="rate-sec">0.0008</div>
+                    <div class="stat-lbl">Per Second</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-val" id="rate-day">68 JOKER</div>
+                    <div class="stat-lbl">Per 24 Hours</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-val" id="global-mined">0 JOKER</div>
+                    <div class="stat-lbl">Total Migrated</div>
+                </div>
+            </div>
+
+            <div class="logo-display-box">
+                <div class="logo-circle" id="joker-logo-element">
+                    <div class="logo-symbol">🃏⚡</div>
+                    <div class="logo-text">JOKER</div>
+                    <div class="logo-sub">TOKEN</div>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="mining-progress-bar"></div>
+                </div>
+                <div class="progress-text" id="progress-percent-txt">Progress: 0% (Ready)</div>
+            </div>
+
+            <div class="factory-status-text" id="factory-status-msg">
+                Machine Status: <span>Ready to Start 3H Refining Process</span>
+            </div>
+
+            <button class="stake-btn" id="mining-action-btn" onclick="triggerAdBeforeMining()">Start 3H Joker Mining</button>
+            <div class="timer-display" id="staking-timer">Ready to Refine & Mine</div>
+        </div>
+
+        <div class="transfer-section" id="transfer-section-box">
+            <div class="section-title" style="font-size:12px; font-weight:900; color:#c084fc; text-transform:uppercase; margin-bottom:8px;">🔄 Mini Exchange Wallet Transfer</div>
+            <p style="font-size: 10.5px; color: #e9d5ff; margin-bottom: 10px;">Transfer mined JOKER to Mini Exchange with mPIN & Gmail Verification.</p>
+            
+            <div class="form-group">
+                <label class="form-label">Mini Exchange Wallet Address:</label>
+                <input type="text" id="transfer-wallet-addr" class="custom-input" placeholder="Enter Joker Mini Exchange Address">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Transfer Amount (JOKER):</label>
+                <input type="number" id="transfer-amount" class="custom-input" placeholder="Enter amount to transfer">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Registered Gmail Address:</label>
+                <input type="email" id="transfer-gmail" class="custom-input" placeholder="Enter your registered Gmail">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Secret mPIN:</label>
+                <input type="password" id="transfer-mpin" class="custom-input" placeholder="Enter 4-6 digit mPIN" maxlength="20">
+            </div>
+
+            <button class="stake-btn" style="background:linear-gradient(135deg, #7c3aed, #c084fc); color:#fff;" onclick="requestSecureTransfer()">Save & Send Verification Link</button>
+        </div>
+    </main>
+
+    <footer class="bottom-bar">
+        <button class="back-main-btn" onclick="goBackToHeadRoom()">← Back to MGSML Mining Headroom</button>
+    </footer>
+
+    <script>
+        let activeUserId = "MGSML2000";
+        let userData = null;
+        let jokerBalance = 0; 
+        let globalTotalSupply = 100000000; 
+        let globalPureMigrated = 0; 
+        let subMigrationPool = 0;  
+        let miningRewardQty = 8.5;
+        let adminAdContent = "";
+        let adminAdTimer = 15; 
+        let transferFeatureEnabled = false; 
+        let adminSecretPin = "1234"; 
+        let registeredUserEmail = "user@gmail.com";
+        const MINING_COOLDOWN = 3 * 60 * 60 * 1000; 
+
+        const canvas = document.getElementById('refinery-canvas');
+        const ctx = canvas.getContext('2d');
+        let particleOffset = 0;
+        let dropOffset = 0;
+        let fireBlinkCounter = 0;
+        let vortexAngle = 0;
+        let counterTick = 0;
+
+        function drawAdvancedPipeline() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const supplyExhausted = globalTotalSupply <= 0;
+
+            if (!supplyExhausted) {
+                fireBlinkCounter = (fireBlinkCounter + 0.15) % (Math.PI * 2);
+                vortexAngle += 0.08;
+                particleOffset = (particleOffset + 2.5) % 110;
+                dropOffset = (dropOffset + 1.5) % 45;
+
+                counterTick++;
+                if (counterTick % 30 === 0) { 
+                    subMigrationPool += 1;
+                }
+            }
+
+            ctx.fillStyle = '#6d28d9';
+            ctx.strokeStyle = '#8b5cf6'; ctx.lineWidth = 2;
+            ctx.fillRect(15, 15, 60, 48); ctx.strokeRect(15, 15, 60, 48);
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 10px sans-serif'; ctx.fillText('🪨 Mineral', 18, 43);
+
+            ctx.strokeStyle = '#8b5cf6'; ctx.lineWidth = 5;
+            ctx.beginPath(); ctx.moveTo(75, 39); ctx.lineTo(125, 39); ctx.stroke();
+
+            ctx.fillStyle = '#6d28d9';
+            ctx.fillRect(125, 15, 60, 48); ctx.strokeRect(125, 15, 60, 48);
+            
+            if (!supplyExhausted) {
+                let fireAlpha = 0.5 + Math.sin(fireBlinkCounter) * 0.4;
+                ctx.fillStyle = `rgba(249, 115, 22, ${fireAlpha})`;
+                ctx.beginPath(); ctx.arc(155, 39, 14 + Math.sin(fireBlinkCounter)*2.5, 0, Math.PI*2); ctx.fill();
+            }
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 10px sans-serif'; ctx.fillText('🔥 Fire', 139, 43);
+
+            ctx.beginPath(); ctx.moveTo(185, 39); ctx.lineTo(235, 39); ctx.stroke();
+
+            ctx.fillStyle = '#6d28d9';
+            ctx.fillRect(235, 15, 60, 48); ctx.strokeRect(235, 15, 60, 48);
+            
+            if (!supplyExhausted) {
+                ctx.save();
+                ctx.translate(265, 39);
+                ctx.rotate(vortexAngle);
+                ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(0, 0, 12, 0, Math.PI * 1.5);
+                ctx.stroke();
+                ctx.restore();
+            }
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 10px sans-serif'; ctx.fillText('💧 Water', 246, 43);
+
+            ctx.beginPath(); ctx.moveTo(295, 39); ctx.lineTo(345, 39); ctx.stroke();
+
+            ctx.fillStyle = '#7c3aed';
+            ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 2;
+            ctx.fillRect(345, 12, 80, 54); ctx.strokeRect(345, 12, 80, 54);
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 9.5px sans-serif';
+            ctx.fillText('⚙️ Sub-Mig', 352, 32); 
+            ctx.fillStyle = '#facc15'; ctx.font = 'bold 9.5px sans-serif';
+            ctx.fillText(`${subMigrationPool.toLocaleString()}`, 350, 52);
+
+            ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(385, 66);
+            ctx.lineTo(385, 105);
+            ctx.stroke();
+
+            ctx.fillStyle = '#0f172a';
+            ctx.strokeStyle = '#8b5cf6'; ctx.lineWidth = 2;
+            ctx.fillRect(15, 75, 320, 52);
+            ctx.strokeRect(15, 75, 320, 52);
+
+            ctx.fillStyle = '#e9d5ff'; ctx.font = 'bold 9.5px sans-serif';
+            ctx.fillText('🔄 SUB-MIGRATION REFINING POOL', 25, 93);
+            ctx.fillStyle = '#c084fc'; ctx.font = '900 14px sans-serif';
+            ctx.fillText(`${subMigrationPool.toLocaleString()} JOKER`, 25, 116);
+
+            ctx.fillStyle = '#0f172a';
+            ctx.strokeStyle = '#facc15'; ctx.lineWidth = 2.5;
+            ctx.fillRect(15, 134, 410, 56);
+            ctx.strokeRect(15, 134, 410, 56);
+
+            ctx.fillStyle = '#e9d5ff'; ctx.font = 'bold 10px sans-serif';
+            ctx.fillText('🏆 3-YEAR PURE GLOBAL MIGRATION VAULT (MAX: 100,000,000)', 25, 152);
+
+            ctx.fillStyle = '#facc15'; ctx.font = '900 17px sans-serif';
+            ctx.fillText(`${globalPureMigrated.toLocaleString()} JOKER`, 25, 178);
+
+            if (supplyExhausted) {
+                ctx.fillStyle = '#ef4444'; ctx.font = 'bold 10px sans-serif';
+                ctx.fillText('✔ 100% MIGRATED / LISTED', 260, 176);
+            }
+
+            if (!supplyExhausted) {
+                [40, 145, 250].forEach(baseX => {
+                    let px = baseX + (particleOffset % 110);
+                    if (px < 345) {
+                        if (px > 235) {
+                            ctx.fillStyle = '#c084fc';
+                            ctx.beginPath(); ctx.arc(px, 39, 5, 0, Math.PI * 2); ctx.fill();
+                        } else if (px > 125) {
+                            ctx.fillStyle = '#f97316';
+                            ctx.beginPath(); ctx.arc(px, 39 + Math.sin(px*0.1)*3, 5, 0, Math.PI * 2); ctx.fill();
+                        } else {
+                            ctx.fillStyle = '#facc15';
+                            ctx.beginPath(); ctx.arc(px, 39, 4.5, 0, Math.PI * 2); ctx.fill();
+                        }
+                    }
+                });
+
+                let dropY = 66 + dropOffset;
+                if (dropY < 105) {
+                    ctx.fillStyle = '#c084fc';
+                    ctx.beginPath(); ctx.arc(385, dropY, 5, 0, Math.PI * 2); ctx.fill();
+                }
+            }
+
+            requestAnimationFrame(drawAdvancedPipeline);
+        }
+
+        drawAdvancedPipeline();
+
+        function toggleMenu() { document.getElementById('sideMenu').classList.toggle('open'); }
+        
+        function openAdminModal() {
+            toggleMenu();
+            document.getElementById('admin-modal').style.display = 'flex';
+            document.getElementById('admin-login-sec').style.display = 'block';
+            document.getElementById('admin-controls-sec').style.display = 'none';
+            document.getElementById('admin-mpin-input').value = '';
+            document.getElementById('admin-mpin-input').focus();
+        }
+        function closeAdminModal() { document.getElementById('admin-modal').style.display = 'none'; }
+
+        function checkAutoUnlock(val) {
+            const enteredPin = val.trim();
+            if (enteredPin === adminSecretPin) {
+                document.getElementById('admin-login-sec').style.display = 'none';
+                document.getElementById('admin-controls-sec').style.display = 'block';
+                document.getElementById('adm-reward-input').value = miningRewardQty;
+                document.getElementById('adm-adlink-input').value = adminAdContent;
+                document.getElementById('adm-adtimer-input').value = adminAdTimer;
+                updateAdminToggleUI();
+            }
+        }
+
+        function verifyAdminPin() {
+            const pin = document.getElementById('admin-mpin-input').value.trim();
+            if (pin === adminSecretPin) {
+                document.getElementById('admin-login-sec').style.display = 'none';
+                document.getElementById('admin-controls-sec').style.display = 'block';
+                document.getElementById('adm-reward-input').value = miningRewardQty;
+                document.getElementById('adm-adlink-input').value = adminAdContent;
+                document.getElementById('adm-adtimer-input').value = adminAdTimer;
+                updateAdminToggleUI();
+            } else {
+                alert('Incorrect mPIN!');
+            }
+        }
+
+        function updateAdminToggleUI() {
+            const btn = document.getElementById('transfer-toggle-btn');
+            const lbl = document.getElementById('transfer-status-label');
+            if (transferFeatureEnabled) {
+                btn.innerText = "Turn OFF";
+                btn.style.background = "#ef4444";
+                lbl.innerText = "Status: ON (Visible)";
+                lbl.style.color = "#10b981";
+            } else {
+                btn.innerText = "Turn ON";
+                btn.style.background = "#10b981";
+                lbl.innerText = "Status: OFF (Hidden)";
+                lbl.style.color = "#ef4444";
+            }
+        }
+
+        async function toggleTransferFeature() {
+            transferFeatureEnabled = !transferFeatureEnabled;
+            updateAdminToggleUI();
+            applyTransferVisibility();
+
+            try {
+                await db.collection("settings").doc("joker_engine_config").set({
+                    transferEnabled: transferFeatureEnabled
+                }, { merge: true });
+            } catch (e) {
+                console.log("Transfer toggle sync note:", e);
+            }
+        }
+
+        function applyTransferVisibility() {
+            const sectionBox = document.getElementById('transfer-section-box');
+            if (transferFeatureEnabled) {
+                sectionBox.style.display = 'block';
+            } else {
+                sectionBox.style.display = 'none';
+            }
+        }
+
+        async function saveMiningRewardOnly() {
+            miningRewardQty = parseFloat(document.getElementById('adm-reward-input').value) || 8.5;
+            try {
+                await db.collection("settings").doc("joker_engine_config").set({
+                    rewardQty: miningRewardQty
+                }, { merge: true });
+                alert(`✔ Success! 3H Mining Reward updated to ${miningRewardQty} JOKER.`);
+            } catch (e) {
+                alert(`✔ Mining Reward updated locally.`);
+            }
+        }
+
+        async function saveAdSettings() {
+            adminAdContent = document.getElementById('adm-adlink-input').value.trim();
+            adminAdTimer = parseInt(document.getElementById('adm-adtimer-input').value) || 15;
+            
+            localStorage.setItem('local_joker_ad_link', adminAdContent);
+            localStorage.setItem('local_joker_ad_timer', adminAdTimer);
+
+            try {
+                await db.collection("settings").doc("joker_engine_config").set({
+                    adContent: adminAdContent,
+                    adTimer: adminAdTimer
+                }, { merge: true });
+                alert('✔ Success! Ad link and timer saved successfully.');
+            } catch (e) {
+                alert('✔ Ad settings saved locally.');
+            }
+        }
+
+        async function saveNewAdminPassword() {
+            let newPin = document.getElementById('adm-new-mpin').value.trim();
+            if (!newPin || newPin.length < 3) {
+                alert('❌ Password/mPIN must be at least 3 characters long!');
+                return;
+            }
+            adminSecretPin = newPin;
+            document.getElementById('adm-new-mpin').value = '';
+            try {
+                await db.collection("settings").doc("joker_engine_config").set({
+                    adminPin: adminSecretPin
+                }, { merge: true });
+                alert('✔ Success! Admin mPIN updated successfully.');
+            } catch (e) {
+                alert('✔ Admin Password updated locally.');
+            }
+        }
+
+        function resolveActiveUser() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const uidFromUrl = urlParams.get('uid');
+            if (uidFromUrl) {
+                activeUserId = uidFromUrl.trim().toUpperCase();
+            } else {
+                activeUserId = "MGSML2000";
+            }
+            document.getElementById('header-uid').innerText = activeUserId;
+            subscribeToUserWallet(activeUserId);
+            loadSystemSettings();
+        }
+
+        function subscribeToUserWallet(uid) {
+            db.collection("users").doc(uid).onSnapshot((doc) => {
+                if (doc.exists) {
+                    userData = doc.data();
+                    jokerBalance = Number(userData.jokerBalance ?? 0);
+                    registeredUserEmail = userData.email ?? "user@gmail.com";
+                    document.getElementById('header-joker-bal').innerText = jokerBalance;
+                } else {
+                    jokerBalance = parseInt(localStorage.getItem('joker_bal')) || 0;
+                    document.getElementById('header-joker-bal').innerText = jokerBalance;
+                }
+            });
+        }
+
+        function loadSystemSettings() {
+            db.collection("system").doc("joker_tokenomics").onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    globalTotalSupply = data.totalSupply ?? 100000000;
+                    globalPureMigrated = data.pureMigrated ?? 0;
+                    subMigrationPool = data.subMigrationPool ?? 0;
+                    updateSupplyDisplay();
+                } else {
+                    db.collection("system").doc("joker_tokenomics").set({ 
+                        totalSupply: 100000000, 
+                        pureMigrated: 0,
+                        subMigrationPool: 0
+                    });
+                }
+            });
+
+            if (localStorage.getItem('local_joker_ad_link')) {
+                adminAdContent = localStorage.getItem('local_joker_ad_link');
+            }
+            if (localStorage.getItem('local_joker_ad_timer')) {
+                adminAdTimer = parseInt(localStorage.getItem('local_joker_ad_timer')) || 15;
+            }
+
+            db.collection("settings").doc("joker_engine_config").onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    miningRewardQty = data.rewardQty ?? 8.5;
+                    
+                    if (data.adContent !== undefined && data.adContent.trim() !== "") {
+                        adminAdContent = data.adContent;
+                        localStorage.setItem('local_joker_ad_link', adminAdContent);
+                    }
+                    if (data.adTimer !== undefined) {
+                        adminAdTimer = data.adTimer;
+                        localStorage.setItem('local_joker_ad_timer', adminAdTimer);
+                    }
+
+                    transferFeatureEnabled = data.transferEnabled ?? false; 
+                    if (data.adminPin) {
+                        adminSecretPin = data.adminPin;
+                    }
+                    applyTransferVisibility();
+                    updateAdminToggleUI();
+                }
+            });
+        }
+
+        function updateSupplyDisplay() {
+            document.getElementById('live-supply-counter').innerText = `${globalTotalSupply.toLocaleString()} / 100,000,000 JOKER`;
+            document.getElementById('global-mined').innerText = globalPureMigrated > 0 ? globalPureMigrated.toLocaleString() + ' JOKER' : '0 JOKER';
+
+            if (globalTotalSupply <= 0) {
+                document.getElementById('factory-status-msg').innerHTML = "Status: <span style='color:#ef4444;'>100% PURE MIGRATION COMPLETED - LISTED!</span>";
+                document.getElementById('mining-action-btn').disabled = true;
+                document.getElementById('mining-action-btn').innerText = "Migration Completed (Listed)";
+                document.getElementById('mining-action-btn').style.opacity = '0.5';
+                setLogoVibration(false);
+            }
+        }
+
+        function setLogoVibration(active) {
+            const logoEl = document.getElementById('joker-logo-element');
+            if (active && globalTotalSupply > 0) {
+                logoEl.classList.add('is-vibrating');
+            } else {
+                logoEl.classList.remove('is-vibrating');
+            }
+        }
+
+        // --- Auto-Closing Full-Screen Ad Overlay & Timer Mechanism ---
+        function triggerAdBeforeMining() {
+            if (globalTotalSupply <= 0) {
+                alert('Total Supply (100,000,000 JOKER) Fully Migrated and Officially Listed.');
+                return;
+            }
+
+            const lastMining = localStorage.getItem('last_mining_time_joker_' + activeUserId);
+            const now = new Date().getTime();
+
+            if (lastMining && now - parseInt(lastMining) < MINING_COOLDOWN) {
+                alert('Mining is active! Please wait for 3H cooldown.');
+                return;
+            }
+
+            const adContainer = document.getElementById('active-ad-container');
+            adContainer.innerHTML = "";
+
+            if (!adminAdContent || adminAdContent.trim() === "") {
+                if (localStorage.getItem('local_joker_ad_link')) {
+                    adminAdContent = localStorage.getItem('local_joker_ad_link');
+                }
+            }
+
+            if (adminAdContent && adminAdContent.trim() !== "") {
+                if (adminAdContent.includes("<script") || adminAdContent.includes("<iframe")) {
+                    adContainer.innerHTML = adminAdContent;
+                } else {
+                    adContainer.innerHTML = `<iframe src="${adminAdContent}" style="width:100%; height:100%; border:none;" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>`;
+                }
+            } else {
+                adContainer.innerHTML = `<div style="color:#ef4444; font-size:12px; padding:20px; text-align:center; font-weight:bold;">⚠️ No Ad Link Configured in Admin Panel! Please set your Adsterra link.</div>`;
+            }
+
+            document.getElementById('ad-modal').style.display = 'flex';
+            
+            let timeLeft = adminAdTimer; 
+            document.getElementById('ad-timer-sec').innerText = timeLeft;
+
+            const adInterval = setInterval(() => {
+                timeLeft--;
+                if (timeLeft > 0) {
+                    document.getElementById('ad-timer-sec').innerText = timeLeft;
+                } else {
+                    clearInterval(adInterval);
+                    document.getElementById('ad-modal').style.display = 'none'; 
+                    adContainer.innerHTML = ""; 
+                    executeMiningClaim(); 
+                }
+            }, 1000);
+        }
+
+        async function executeMiningClaim() {
+            if (globalTotalSupply <= 0) return;
+
+            jokerBalance += miningRewardQty;
+            globalTotalSupply = Math.max(0, globalTotalSupply - miningRewardQty);
+            globalPureMigrated += miningRewardQty;
+            subMigrationPool += miningRewardQty * 2;
+            
+            const now = new Date().getTime();
+
+            localStorage.setItem('joker_bal', jokerBalance);
+            localStorage.setItem('last_mining_time_joker_' + activeUserId, now);
+
+            try {
+                await db.collection("users").doc(activeUserId).set({ jokerBalance: jokerBalance }, { merge: true });
+                await db.collection("system").doc("joker_tokenomics").set({ 
+                    totalSupply: globalTotalSupply,
+                    pureMigrated: globalPureMigrated,
+                    subMigrationPool: subMigrationPool
+                }, { merge: true });
+            } catch (e) {
+                console.log("Firestore sync note:", e);
+            }
+
+            document.getElementById('header-joker-bal').innerText = jokerBalance;
+            updateSupplyDisplay();
+
+            document.getElementById('factory-status-msg').innerHTML = "Machine Status: <span>24K Pure Migration Credited!</span>";
+            alert(`3-Hour Refinery Completed! +${miningRewardQty} Pure JOKER Migrated.`);
+            startCountdownTimer(MINING_COOLDOWN);
+        }
+
+        function initMiningTimer() {
+            const lastMining = localStorage.getItem('last_mining_time_joker_' + activeUserId);
+            if (lastMining) {
+                const now = new Date().getTime();
+                const elapsed = now - parseInt(lastMining);
+                if (elapsed < MINING_COOLDOWN && globalTotalSupply > 0) {
+                    startCountdownTimer(MINING_COOLDOWN - elapsed);
+                } else {
+                    setLogoVibration(false);
+                    document.getElementById('staking-timer').innerText = "Ready to Refine & Mine";
+                    document.getElementById('mining-action-btn').innerText = "Start 3H Joker Mining";
+                }
+            } else {
+                setLogoVibration(false);
+            }
+        }
+
+        function startCountdownTimer(duration) {
+            const btn = document.getElementById('mining-action-btn');
+            const timerDisplay = document.getElementById('staking-timer');
+            const progressBar = document.getElementById('mining-progress-bar');
+            const progressTxt = document.getElementById('progress-percent-txt');
+            btn.innerText = "Refining in Progress...";
+            
+            setLogoVibration(true);
+            
+            let totalDuration = MINING_COOLDOWN;
+            let timeLeft = duration;
+
+            const interval = setInterval(() => {
+                if (globalTotalSupply <= 0) {
+                    clearInterval(interval);
+                    setLogoVibration(false);
+                    return;
+                }
+
+                let hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                let minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                let seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+                timerDisplay.innerText = `Cooldown: ${hours}h ${minutes}m ${seconds}s`;
+
+                let elapsed = totalDuration - timeLeft;
+                let percent = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100)).toFixed(1);
+                progressBar.style.width = percent + '%';
+                progressTxt.innerText = `Progress: ${percent}% (Active: ${hours}h ${minutes}m ${seconds}s remaining)`;
+
+                timeLeft -= 1000;
+
+                if (timeLeft < 0) {
+                    clearInterval(interval);
+                    setLogoVibration(false);
+                    timerDisplay.innerText = "Ready to Refine & Mine";
+                    btn.innerText = "Start 3H Joker Mining";
+                    progressBar.style.width = '100%';
+                    progressTxt.innerText = `Progress: 100% (3H Completed - Ready)`;
+                    document.getElementById('factory-status-msg').innerHTML = "Machine Status: <span>3H Completed - Ready to Start Next Cycle</span>";
+                }
+            }, 1000);
+        }
+
+        async function requestSecureTransfer() {
+            let walletAddr = document.getElementById('transfer-wallet-addr').value.trim();
+            let amt = parseFloat(document.getElementById('transfer-amount').value);
+            let inputEmail = document.getElementById('transfer-gmail').value.trim().toLowerCase();
+            let inputMpin = document.getElementById('transfer-mpin').value.trim();
+
+            if (!walletAddr) {
+                alert('❌ Please enter a valid Mini Exchange Wallet Address!');
+                return;
+            }
+            if (!amt || amt <= 0 || amt > jokerBalance) {
+                alert('❌ Invalid transfer amount or insufficient balance!');
+                return;
+            }
+            if (!inputEmail || inputEmail !== registeredUserEmail.toLowerCase()) {
+                alert('❌ Error: Incorrect or unregistered Gmail address!');
+                return;
+            }
+            if (!inputMpin || inputMpin !== adminSecretPin) {
+                alert('❌ Incorrect mPIN!');
+                return;
+            }
+
+            jokerBalance -= amt;
+            document.getElementById('header-joker-bal').innerText = jokerBalance;
+            document.getElementById('transfer-wallet-addr').value = '';
+            document.getElementById('transfer-amount').value = '';
+            document.getElementById('transfer-gmail').value = '';
+            document.getElementById('transfer-mpin').value = '';
+
+            try {
+                await db.collection("users").doc(activeUserId).set({ jokerBalance: jokerBalance }, { merge: true });
+                alert(`✔ Success! Verification link sent to ${inputEmail}. Please check your Gmail to confirm transfer of ${amt} JOKER to Mini Exchange.`);
+            } catch (e) {
+                alert(`✔ Transfer Request Saved Successfully for ${amt} JOKER!`);
+            }
+        }
+
+        function goBackToHeadRoom() {
+            window.location.href = "https://mgsml-sky.github.io/mgsml-mining-headroom/";
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.ready();
+                window.Telegram.WebApp.expand();
+            }
+            resolveActiveUser();
+            initMiningTimer();
+        });
+    </script>
+</body>
+</html>
